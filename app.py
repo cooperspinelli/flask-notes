@@ -1,11 +1,11 @@
 import os
-from flask import Flask, render_template, redirect, session
+from flask import Flask, render_template, redirect, session, flash
 from models import User, connect_db, db
-from forms import RegisterForm
+from forms import RegisterForm, LoginForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    "DATABASE_URL", 'postgresql:///pulse37')
+    "DATABASE_URL", 'postgresql:///flask_notes')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['SECRET_KEY'] = "secret"
@@ -46,3 +46,36 @@ def register():
     else:
         return render_template("register.html", form=form)
 
+@app.route('/login', methods=['Get', 'POST'])
+def login():
+    """GET: Display login form
+       POST: Process login form by adding username to session
+             then redirects to /user/<username>"""
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        pwd = form.password.data
+
+        user = User.authenticate(username, pwd)
+
+        if user:
+            session['username'] = user.username
+            return redirect(f'/users/{user.username}')
+
+        else:
+            form.username.errors = ['Invalid username or password']
+
+    else:
+        return render_template("login.html", form=form)
+
+@app.get('/users/<username>')
+def display_user_info(username):
+
+    if session['username'] != username:
+        flash("You dont have access to that page!")
+        return redirect('/login')
+
+    user = User.query.get_or_404(username)
+    return render_template('user_info.html', user = user)
