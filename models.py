@@ -76,6 +76,7 @@ class User(db.Model):
 
 
 class Note(db.Model):
+    """Model for notes"""
 
     __tablename__ = 'notes'
 

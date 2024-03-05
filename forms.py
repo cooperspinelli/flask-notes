@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField
 from wtforms.validators import InputRequired, Length, Email
 
+# TODO: Make a file constants.py for input length to validtate on the form level as well
 
 class RegisterForm(FlaskForm):
     """Form for registering"""

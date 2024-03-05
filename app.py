@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, redirect, session, flash
-from models import User, connect_db, db
-from forms import RegisterForm, LoginForm, CSRFProtectForm
+from models import User, Note, connect_db, db
+from forms import RegisterForm, LoginForm, CSRFProtectForm, AddNoteForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -12,6 +12,7 @@ app.config['SECRET_KEY'] = "secret"
 
 connect_db(app)
 
+# TODO: add this to a constants.py
 SESSION_LOGIN_KEY = 'username'
 
 
@@ -24,6 +25,7 @@ def redirect_to_registration():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    #TODO import IntegrityError and try/except
     """GET: Display registration form
        POST: Process registration form by adding new user
              then redirects to /user/<username>"""
@@ -48,7 +50,7 @@ def register():
     else:
         return render_template("register.html", form=form)
 
-
+#TODO: flash a message after successful logins
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """GET: Display login form
@@ -70,8 +72,7 @@ def login():
         else:
             form.username.errors = ['Invalid username or password']
 
-    else:
-        return render_template("login.html", form=form)
+    return render_template("login.html", form=form)
 
 
 @app.get('/users/<username>')
@@ -80,6 +81,7 @@ def display_user_info(username):
 
     form = CSRFProtectForm()
 
+    # TODO: be more pythonic
     if session.get('username') != username:
         flash("You dont have access to that page!")
         return redirect('/login')
@@ -87,12 +89,11 @@ def display_user_info(username):
     user = User.query.get_or_404(username)
     notes = user.notes
 
+    # TODO: more brevity, user.notes in template
     return render_template('user_info.html',
                            user=user,
                            notes=notes,
                            form=form)
-
-
 
 
 @app.post('/logout')
@@ -111,31 +112,42 @@ def logout():
 def delete_user(username):
     """ delete a user, log them out and redirect them to homepage """
 
-    user = User.query.get_or_404(username)
-    user_notes = user.notes
+    form = CSRFProtectForm()
 
-    db.session.delete(user)
-    for note in user_notes:
-        db.session.delete(note)
-    db.session.commit()
+    #TODO: Check if its s a post to the right user
 
-    session.pop(SESSION_LOGIN_KEY, None)
+    if form.validate_on_submit():
+
+        user = User.query.get_or_404(username)
+        user_notes = user.notes
+
+        db.session.delete(user)
+        for note in user_notes:
+            db.session.delete(note)
+        db.session.commit()
+
+        session.pop(SESSION_LOGIN_KEY, None)
 
     return redirect("/")
 
 
-@app.post('notes/<note_id>/delete')
-def delete_note(note_id)
+@app.post('/notes/<note_id>/delete')
+def delete_note(note_id):
     """ deletes a note and redirects back to user details page """
 
-    note = Note.query.get_or_404(note_id)
+    #TODO: Check if its the right note
 
-    db.session.delete(note)
-    db.session.commit()
+    form = CSRFProtectForm()
 
-    return redirect("/users/<username>")
+    if form.validate_on_submit():
+        note = Note.query.get_or_404(note_id)
 
+        db.session.delete(note)
+        db.session.commit()
 
+    return redirect(f"/users/{note.owner_username}")
+
+#TODO: flash it
 @app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
 def handle_add_note_form(username):
     """GET: Display add note form
@@ -145,12 +157,10 @@ def handle_add_note_form(username):
     form = AddNoteForm()
 
     if form.validate_on_submit():
-        title = form.title.data
-        content = form.content.data
 
         new_note = Note(
-            title=title,
-            content=content,
+            title=form.title.data,
+            content=form.content.data,
             owner_username=username
         )
 
@@ -163,15 +173,23 @@ def handle_add_note_form(username):
         return render_template("add_note.html", form=form)
 
 
+@app.route('/notes/<note_id>/update', methods=['GET', 'POST'])
+def handle_update_note_form(note_id):
+    """GET: Display edit note form
+       POST: Process edit note form by editing not
+             then redirects to /user/<username>"""
 
-"""
-TODO:
+    note = Note.query.get_or_404(note_id)
+    form = AddNoteForm(obj=note)
 
-route for add note form (bth get and post)
-this will be a single view function
-and add html and note form
+    if form.validate_on_submit():
 
-route for update note form (both get and post)
-this will be a single view function
-and add html
-"""
+        note.title = form.title.data
+        note.content = form.content.data
+
+        db.session.commit()
+
+        return redirect(f"/users/{note.owner_username}")
+
+    else:
+        return render_template("edit_note.html", form=form)
