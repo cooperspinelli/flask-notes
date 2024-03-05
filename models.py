@@ -4,6 +4,8 @@ from flask_bcrypt import Bcrypt
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
+MAX_USERNAME_LENGTH = 20
+
 
 def connect_db(app):
     """Connect to the database"""
@@ -18,8 +20,10 @@ class User(db.Model):
 
     __tablename__ = 'users'
 
+    notes = db.relationship('Note', backref='user')
+
     username = db.Column(
-        db.String(20),
+        db.String(MAX_USERNAME_LENGTH),
         primary_key=True
     )
 
@@ -69,3 +73,29 @@ class User(db.Model):
             return u
         else:
             return False
+
+
+class Note(db.Model):
+
+    __tablename__ = 'notes'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    title = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    content = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    owner_username = db.Column(
+        db.String(MAX_USERNAME_LENGTH),
+        db.ForeignKey('users.username'),
+        nullable = False
+    )

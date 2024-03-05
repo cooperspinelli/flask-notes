@@ -12,7 +12,7 @@ app.config['SECRET_KEY'] = "secret"
 
 connect_db(app)
 
-# TODO: Ask if there is database validation for emails (sqlalchemy constraint
+SESSION_LOGIN_KEY = 'username'
 
 
 @app.get('/')
@@ -21,7 +21,7 @@ def redirect_to_registration():
 
     return redirect('/register')
 
-# TODO: create global constant for session["CONSTANT"]
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """GET: Display registration form
@@ -41,14 +41,14 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        session["username"] = user.username
+        session[SESSION_LOGIN_KEY] = user.username
 
         return redirect(f'/users/{user.username}')
 
     else:
         return render_template("register.html", form=form)
 
-# TODO: think about implementing preventing user from visiting login or register page 
+
 @app.route('/login', methods=['Get', 'POST'])
 def login():
     """GET: Display login form
@@ -64,7 +64,7 @@ def login():
         user = User.authenticate(username, pwd)
 
         if user:
-            session['username'] = user.username
+            session[SESSION_LOGIN_KEY] = user.username
             return redirect(f'/users/{user.username}')
 
         else:
@@ -85,9 +85,14 @@ def display_user_info(username):
         return redirect('/login')
 
     user = User.query.get_or_404(username)
+    notes = user.notes
+
     return render_template('user_info.html',
                            user=user,
+                           notes=notes,
                            form=form)
+
+
 
 
 @app.post('/logout')
@@ -100,3 +105,20 @@ def logout():
         session.pop("username", None)
 
     return redirect("/")
+
+
+
+"""
+TODO:
+
+post request to delete user
+post request to delete note
+
+route for add note form (bth get and post)
+this will be a single view function
+and add html and note form
+
+route for update note form (both get and post)
+this will be a single view function
+and add html
+"""

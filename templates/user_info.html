@@ -4,15 +4,42 @@
 
 {% block content %}
 
-<h1>{{ user.first_name }} {{ user.last_name }}</h1>
-<p>{{ user.email }}</p>
-<p>{{ user.username }}</p>
+<div>
+  <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+  <p>{{ user.email }}</p>
+  <p>{{ user.username }}</p>
+</div>
 
-<form action="/logout" method="POST">
-  {{ form.hidden_tag() }} <!--add type=hidden form fields -->
-  <button type="submit">Logout</button>
-</form>
+<div>
+  <h3>Notes</h3>
+  <ul>
+    {% for note in notes %}
 
+    <li>
+      <a href="/notes/{{ note.id }}/update">Update Note</a>
+      <form action="/notes/{{ note.id }}/delete" method="POST">
+        {{ form.hidden_tag() }} <!--add type=hidden form fields -->
+        <button type="submit">Delete Note</button>
+      </form>
+      <p>{{ note.title }}</p>
+    </li>
+
+    {% endfor %}
+  </ul>
+</div>
+
+<div>
+
+  <a href="/users/{{ user.username }}/notes/add">Add Note</a>
+
+
+  <form method="POST">
+    {{ form.hidden_tag() }} <!--add type=hidden form fields -->
+    <button type="submit" formaction="/users/{{ user.username }}/delete">Delete User</button>
+    <button type="submit" formaction="/logout">Logout</button>
+  </form>
+
+</div>
 
 
 {% endblock %}
