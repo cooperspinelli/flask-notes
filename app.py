@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, redirect, session, flash
 from models import User, connect_db, db
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -14,12 +14,14 @@ connect_db(app)
 
 # TODO: Ask if there is database validation for emails (sqlalchemy constraint
 
+
 @app.get('/')
 def redirect_to_registration():
     """Returns a redirect to /register"""
 
     return redirect('/register')
 
+# TODO: create global constant for session["CONSTANT"]
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """GET: Display registration form
@@ -46,6 +48,7 @@ def register():
     else:
         return render_template("register.html", form=form)
 
+# TODO: think about implementing preventing user from visiting login or register page 
 @app.route('/login', methods=['Get', 'POST'])
 def login():
     """GET: Display login form
@@ -70,12 +73,30 @@ def login():
     else:
         return render_template("login.html", form=form)
 
+
 @app.get('/users/<username>')
 def display_user_info(username):
+    """ Displays user info and logout button """
 
-    if session['username'] != username:
+    form = CSRFProtectForm()
+
+    if session.get('username') != username:
         flash("You dont have access to that page!")
         return redirect('/login')
 
     user = User.query.get_or_404(username)
-    return render_template('user_info.html', user = user)
+    return render_template('user_info.html',
+                           user=user,
+                           form=form)
+
+
+@app.post('/logout')
+def logout():
+    """ Logs user out and redirects to homepage """
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+        session.pop("username", None)
+
+    return redirect("/")

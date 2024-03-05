@@ -2,22 +2,26 @@
 
 {% block title %} Login {% endblock %}
 
-{% block content  %}
+{% block content %}
+
+{% for message in get_flashed_messages() %}
+<p>{{ message }}</p>
+{% endfor %}
 
 <form method="POST">
   {{ form.hidden_tag() }} <!--add type=hidden form fields -->
 
   {% for field in form
-         if field.widget.input_type != 'hidden' %}
+  if field.widget.input_type != 'hidden' %}
 
-    <p class="mb-3 col-2">
-      {{ field.label }}
-      {{ field }}
+  <p class="mb-3 col-2">
+    {{ field.label }}
+    {{ field }}
 
-      {% for error in field.errors %}
-        {{ error }}
-      {% endfor %}
-    </p>
+    {% for error in field.errors %}
+    {{ error }}
+    {% endfor %}
+  </p>
 
   {% endfor %}
 
