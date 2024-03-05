@@ -31,6 +31,7 @@ class RegisterForm(FlaskForm):
         validators=[InputRequired()]
     )
 
+
 class LoginForm(FlaskForm):
     """Form for logging in"""
 
@@ -43,6 +44,21 @@ class LoginForm(FlaskForm):
         "Password",
         validators=[InputRequired()]
     )
+
+
+class AddNoteForm(FlaskForm):
+    """ Form for adding a note """
+
+    title = StringField(
+        "Title",
+        validators=[InputRequired()]
+    )
+
+    content = StringField(
+        "Content",
+        validators=[InputRequired()]
+    )
+
 
 class CSRFProtectForm(FlaskForm):
     """ Form for CSRF protection """
