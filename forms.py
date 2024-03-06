@@ -1,15 +1,16 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField
 from wtforms.validators import InputRequired, Length, Email
+from constants import (MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH,
+    MAX_FIRSTNAME_LENGTH, MAX_LASTNAME_LENGTH, MAX_NOTE_TITLE_LENGTH)
 
-# TODO: Make a file constants.py for input length to validtate on the form level as well
 
 class RegisterForm(FlaskForm):
     """Form for registering"""
 
     username = StringField(
         "Username",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=MAX_USERNAME_LENGTH)]
     )
 
     password = PasswordField(
@@ -19,17 +20,17 @@ class RegisterForm(FlaskForm):
 
     email = EmailField(
         "Email",
-        validators=[InputRequired(), Email()]
+        validators=[InputRequired(), Email(), Length(max=MAX_EMAIL_LENGTH)]
     )
 
     first_name = StringField(
         "First Name",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=MAX_FIRSTNAME_LENGTH)]
     )
 
     last_name = StringField(
         "Last Name",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=MAX_LASTNAME_LENGTH)]
     )
 
 
@@ -52,7 +53,7 @@ class AddNoteForm(FlaskForm):
 
     title = StringField(
         "Title",
-        validators=[InputRequired()]
+        validators=[InputRequired(), Length(max=MAX_NOTE_TITLE_LENGTH)]
     )
 
     content = StringField(

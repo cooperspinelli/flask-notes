@@ -1,10 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from constants import (MAX_USERNAME_LENGTH, MAX_PSW_LENGTH, MAX_EMAIL_LENGTH,
+    MAX_FIRSTNAME_LENGTH, MAX_LASTNAME_LENGTH, MAX_NOTE_TITLE_LENGTH)
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
-
-MAX_USERNAME_LENGTH = 20
 
 
 def connect_db(app):
@@ -28,23 +28,23 @@ class User(db.Model):
     )
 
     hashed_password = db.Column(
-        db.String(100),
+        db.String(MAX_PSW_LENGTH),
         nullable=False
     )
 
     email = db.Column(
-        db.String(50),
+        db.String(MAX_EMAIL_LENGTH),
         nullable=False,
         unique=True,
     )
 
     first_name = db.Column(
-        db.String(30),
+        db.String(MAX_FIRSTNAME_LENGTH),
         nullable=False
     )
 
     last_name = db.Column(
-        db.String(30),
+        db.String(MAX_LASTNAME_LENGTH),
         nullable=False
     )
 
@@ -86,7 +86,7 @@ class Note(db.Model):
     )
 
     title = db.Column(
-        db.String(100),
+        db.String(MAX_NOTE_TITLE_LENGTH),
         nullable=False
     )
 
