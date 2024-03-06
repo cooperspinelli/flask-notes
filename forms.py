@@ -56,6 +56,7 @@ class AddNoteForm(FlaskForm):
         validators=[InputRequired(), Length(max=MAX_NOTE_TITLE_LENGTH)]
     )
 
+    # listen to gracee
     content = StringField(
         "Content",
         validators=[InputRequired()]

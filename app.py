@@ -3,6 +3,7 @@ from flask import Flask, render_template, redirect, session, flash
 from models import User, Note, connect_db, db
 from forms import RegisterForm, LoginForm, CSRFProtectForm, AddNoteForm
 from constants import SESSION_LOGIN_KEY
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -23,7 +24,6 @@ def redirect_to_registration():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # TODO import IntegrityError and try/except
     """GET: Display registration form
        POST: Process registration form by adding new user
              then redirects to /user/<username>"""
@@ -37,18 +37,21 @@ def register():
         first_name = form.first_name.data
         last_name = form.last_name.data
 
-        user = User.register(username, pwd, email, first_name, last_name)
-        db.session.add(user)
-        db.session.commit()
+        try:
+            user = User.register(username, pwd, email, first_name, last_name)
+            db.session.add(user)
+            db.session.commit()
 
-        session[SESSION_LOGIN_KEY] = user.username
+            session[SESSION_LOGIN_KEY] = user.username
 
-        flash("User Registered!")
+            flash("User Registered!")
 
-        return redirect(f'/users/{user.username}')
+            return redirect(f'/users/{user.username}')
 
-    else:
-        return render_template("register.html", form=form)
+        except IntegrityError:
+            form.username.errors = ['Username or email already taken']
+
+    return render_template("register.html", form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -82,7 +85,7 @@ def display_user_info(username):
 
     form = CSRFProtectForm()
 
-    if username not in session:
+    if session.get(SESSION_LOGIN_KEY) != username:
         flash("You don't have access to that page!")
         return redirect('/login')
 
@@ -106,6 +109,8 @@ def logout():
 
     return redirect("/")
 
+#TODO: take a look at unauthorized error
+# install it from werkzeug.exceptions
 
 @app.post('/users/<username>/delete')
 def delete_user(username):
@@ -113,7 +118,9 @@ def delete_user(username):
 
     form = CSRFProtectForm()
 
-    # TODO: Check if its s a post to the right user
+    if session.get(SESSION_LOGIN_KEY) != username:
+        flash("You don't have access to that operation")
+        return redirect('/login')
 
     if form.validate_on_submit():
 
@@ -135,12 +142,15 @@ def delete_user(username):
 def delete_note(note_id):
     """ deletes a note and redirects back to user details page """
 
-    # TODO: Check if its the right note
+    note = Note.query.get_or_404(note_id)
+
+    if session.get(SESSION_LOGIN_KEY) != note.owner_username:
+        flash("You can't do that")
+        return redirect('/login')
 
     form = CSRFProtectForm()
 
     if form.validate_on_submit():
-        note = Note.query.get_or_404(note_id)
 
         db.session.delete(note)
         db.session.commit()
@@ -155,6 +165,10 @@ def handle_add_note_form(username):
     """GET: Display add note form
        POST: Process add note form by adding note
              then redirects to /user/<username>"""
+
+    if session.get(SESSION_LOGIN_KEY) != username:
+        flash("Stay in your lane")
+        return redirect('/login')
 
     form = AddNoteForm()
 
@@ -184,6 +198,11 @@ def handle_update_note_form(note_id):
              then redirects to /user/<username>"""
 
     note = Note.query.get_or_404(note_id)
+
+    if session.get(SESSION_LOGIN_KEY) != note.owner_username:
+        flash("You can't do that")
+        return redirect('/login')
+
     form = AddNoteForm(obj=note)
 
     if form.validate_on_submit():

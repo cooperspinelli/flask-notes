@@ -1,7 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from constants import (MAX_USERNAME_LENGTH, MAX_PSW_LENGTH, MAX_EMAIL_LENGTH,
-    MAX_FIRSTNAME_LENGTH, MAX_LASTNAME_LENGTH, MAX_NOTE_TITLE_LENGTH)
+from constants import (
+    MAX_USERNAME_LENGTH,
+    MAX_PSW_LENGTH,
+    MAX_EMAIL_LENGTH,
+    MAX_FIRSTNAME_LENGTH,
+    MAX_LASTNAME_LENGTH,
+    MAX_NOTE_TITLE_LENGTH)
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
